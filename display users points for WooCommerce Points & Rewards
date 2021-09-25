@@ -1,0 +1,39 @@
+function woocommerce_points_rewards_my_points($atts, $content = null) { // **SHORTCODE** add string ($atts, $content=null)
+		global $wc_points_rewards;
+
+		$points_balance = WC_Points_Rewards_Manager::get_users_points( get_current_user_id() );
+		$points_label   = $wc_points_rewards->get_points_label( $points_balance );
+
+		$count = apply_filters( 'wc_points_rewards_my_account_points_events', 5, get_current_user_id() );
+
+		// get a set of points events, ordered newest to oldest
+		$args = array(
+			'orderby' => array(
+				'field' => 'date',
+				'order' => 'DESC',
+			),
+			'per_page' => $count,
+			'paged'    => 0,
+			'user'     => get_current_user_id(),
+		);
+
+		$events = WC_Points_Rewards_Points_Log::get_points_log_entries( $args );
+		
+		ob_start(); // **SHORTCODE** object start
+		// load the template
+		wc_get_template(
+			'myaccount/my-points.php',
+			array(
+				'points_balance' => $points_balance,
+				'points_label'   => $points_label,
+				'events'         => $events,
+			),
+			'',
+			$wc_points_rewards->get_plugin_path() . '/templates/'
+		);
+		$content = ob_get_clean(); // **SHORTCODE** 
+
+		return do_shortcode( $content ); // **SHORTCODE** place shortcode in content area
+	}
+	add_shortcode ('points_shortcode', 'woocommerce_points_rewards_my_points'); // **SHORTCODE** declare shortcode to be used [points_shortcode]
+}
